@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>What Human Listeners Reveal About TTS Failures: Lessons from VoiceArena's Evaluation Data | VoiceArena</title>
+<meta name="description" content="We analyzed VoiceArena's pairwise TTS evaluation data — the votes, the comments, the failure patterns. Here is what human listeners actually hear when current voice models fail.">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+
+  :root {
+    --bg: #0a0a0b;
+    --surface: #111113;
+    --surface2: #18181c;
+    --border: #232329;
+    --accent: #e8ff47;
+    --accent2: #47c5ff;
+    --accent3: #ff6b47;
+    --text: #e8e8ee;
+    --text-muted: #8888a0;
+    --text-dim: #555568;
+    --serif: 'DM Serif Display', Georgia, serif;
+    --sans: 'DM Sans', system-ui, sans-serif;
+    --mono: 'JetBrains Mono', monospace;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 17px;
+    line-height: 1.75;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* NAV */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 18px 40px;
+    background: rgba(10,10,11,0.88);
+    backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--border);
+  }
+  .nav-logo {
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--accent);
+    text-decoration: none;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .nav-links {
+    display: flex; gap: 32px;
+    list-style: none;
+  }
+  .nav-links a {
+    color: var(--text-muted);
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    transition: color 0.2s;
+  }
+  .nav-links a:hover { color: var(--text); }
+
+  /* HERO */
+  .hero {
+    padding: 140px 40px 80px;
+    max-width: 800px;
+    margin: 0 auto;
+  }
+  .tag {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    border: 1px solid rgba(232,255,71,0.3);
+    padding: 5px 12px;
+    border-radius: 4px;
+    margin-bottom: 28px;
+  }
+  .tag::before {
+    content: '';
+    width: 6px; height: 6px;
+    background: var(--accent);
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+  h1 {
+    font-family: var(--serif);
+    font-size: clamp(32px, 5vw, 52px);
+    line-height: 1.12;
+    font-weight: 400;
+    color: #fff;
+    margin-bottom: 28px;
+    letter-spacing: -0.02em;
+  }
+  h1 em {
+    font-style: italic;
+    color: var(--accent);
+  }
+  .subtitle {
+    font-size: 19px;
+    line-height: 1.65;
+    color: var(--text-muted);
+    max-width: 680px;
+    margin-bottom: 36px;
+  }
+  .meta {
+    display: flex; align-items: center; gap: 20px;
+    flex-wrap: wrap;
+    font-size: 13px;
+    color: var(--text-dim);
+    border-top: 1px solid var(--border);
+    padding-top: 20px;
+  }
+  .meta-item {
+    display: flex; align-items: center; gap: 6px;
+  }
+  .meta-item strong {
+    color: var(--text-muted);
+    font-weight: 500;
+  }
+
+  /* PULL QUOTE / LEDE */
+  .lede {
+    background: var(--surface);
+    border-left: 3px solid var(--accent);
+    padding: 24px 32px;
+    border-radius: 0 8px 8px 0;
+    margin: 48px 0;
+    font-size: 18px;
+    line-height: 1.7;
+    color: var(--text);
+  }
+  .lede strong { color: var(--accent); }
+
+  /* CONTENT */
+  .content {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 0 40px 100px;
+  }
+  h2 {
+    font-family: var(--serif);
+    font-size: clamp(24px, 3.5vw, 34px);
+    font-weight: 400;
+    color: #fff;
+    margin: 64px 0 20px;
+    line-height: 1.2;
+    letter-spacing: -0.01em;
+  }
+  h3 {
+    font-family: var(--sans);
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--accent2);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    margin: 40px 0 14px;
+    font-size: 13px;
+  }
+  p { margin-bottom: 20px; color: var(--text); }
+
+  a { color: var(--accent2); text-decoration: none; border-bottom: 1px solid rgba(71,197,255,0.3); transition: border-color 0.2s; }
+  a:hover { border-color: var(--accent2); }
+
+  /* DATA CALLOUTS */
+  .stat-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 16px;
+    margin: 40px 0;
+  }
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 24px 20px;
+    text-align: center;
+    transition: border-color 0.2s, transform 0.2s;
+  }
+  .stat-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+  .stat-number {
+    font-family: var(--mono);
+    font-size: 36px;
+    font-weight: 500;
+    color: var(--accent);
+    display: block;
+    line-height: 1;
+    margin-bottom: 8px;
+  }
+  .stat-label {
+    font-size: 12px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  /* FAILURE TAXONOMY */
+  .failure-list {
+    list-style: none;
+    margin: 24px 0;
+  }
+  .failure-item {
+    display: flex;
+    gap: 20px;
+    padding: 20px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .failure-item:last-child { border-bottom: none; }
+  .failure-rank {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-dim);
+    min-width: 32px;
+    padding-top: 3px;
+  }
+  .failure-content h4 {
+    font-size: 16px;
+    font-weight: 600;
+    color: #fff;
+    margin-bottom: 6px;
+  }
+  .failure-content p {
+    font-size: 14px;
+    color: var(--text-muted);
+    margin: 0;
+  }
+  .failure-badge {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 4px;
+    margin-left: 10px;
+    font-weight: 500;
+    vertical-align: middle;
+  }
+  .badge-high { background: rgba(255,107,71,0.15); color: var(--accent3); border: 1px solid rgba(255,107,71,0.3); }
+  .badge-mid { background: rgba(71,197,255,0.1); color: var(--accent2); border: 1px solid rgba(71,197,255,0.25); }
+  .badge-low { background: rgba(232,255,71,0.08); color: var(--accent); border: 1px solid rgba(232,255,71,0.2); }
+
+  /* QUOTE BLOCK */
+  .human-quote {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 24px 28px;
+    margin: 28px 0;
+    position: relative;
+    overflow: hidden;
+  }
+  .human-quote::before {
+    content: '"';
+    position: absolute;
+    top: -10px; left: 20px;
+    font-family: var(--serif);
+    font-size: 80px;
+    color: var(--border);
+    line-height: 1;
+    pointer-events: none;
+  }
+  .human-quote p {
+    font-style: italic;
+    color: var(--text-muted);
+    font-size: 15px;
+    margin: 0;
+    position: relative;
+    z-index: 1;
+  }
+  .quote-label {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-dim);
+    margin-top: 10px;
+    display: block;
+  }
+
+  /* COMPARISON TABLE */
+  .model-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 32px 0;
+    font-size: 14px;
+  }
+  .model-table th {
+    font-family: var(--mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-dim);
+    padding: 10px 16px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+  }
+  .model-table td {
+    padding: 14px 16px;
+    border-bottom: 1px solid rgba(35,35,41,0.5);
+    color: var(--text-muted);
+  }
+  .model-table tr:hover td { background: var(--surface); }
+  .model-table td:first-child { color: #fff; font-weight: 500; }
+  .win-bar {
+    display: inline-flex; align-items: center; gap: 8px;
+  }
+  .bar-track {
+    width: 80px; height: 6px;
+    background: var(--border);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    background: var(--accent);
+    transition: width 0.3s;
+  }
+
+  /* METHODOLOGY ASIDE */
+  .aside-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 28px 32px;
+    margin: 48px 0;
+  }
+  .aside-box h4 {
+    font-family: var(--mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-dim);
+    margin-bottom: 14px;
+  }
+  .aside-box p { font-size: 14px; color: var(--text-muted); margin-bottom: 10px; }
+  .aside-box p:last-child { margin-bottom: 0; }
+
+  /* SECTION DIVIDER */
+  .divider {
+    display: flex; align-items: center; gap: 16px;
+    margin: 56px 0;
+    color: var(--text-dim);
+    font-family: var(--mono);
+    font-size: 11px;
+  }
+  .divider::before, .divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* INSIGHT CALLOUT */
+  .insight {
+    background: linear-gradient(135deg, rgba(232,255,71,0.06) 0%, rgba(71,197,255,0.04) 100%);
+    border: 1px solid rgba(232,255,71,0.2);
+    border-radius: 10px;
+    padding: 24px 28px;
+    margin: 32px 0;
+  }
+  .insight-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--accent);
+    margin-bottom: 10px;
+    display: block;
+  }
+  .insight p { color: var(--text); margin: 0; font-size: 16px; line-height: 1.65; }
+
+  /* FOOTER */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 40px;
+    max-width: 800px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: gap;
+    gap: 20px;
+  }
+  .footer-brand {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--text-dim);
+  }
+  .footer-links {
+    display: flex; gap: 24px; list-style: none;
+  }
+  .footer-links a {
+    font-size: 13px;
+    color: var(--text-dim);
+    text-decoration: none;
+    border: none;
+    transition: color 0.2s;
+  }
+  .footer-links a:hover { color: var(--text-muted); }
+
+  /* PROGRESS BAR (reading) */
+  #reading-progress {
+    position: fixed; top: 0; left: 0;
+    height: 2px;
+    background: var(--accent);
+    z-index: 200;
+    width: 0%;
+    transition: width 0.1s;
+  }
+
+  @media (max-width: 640px) {
+    nav { padding: 16px 20px; }
+    .nav-links { display: none; }
+    .hero, .content { padding-left: 20px; padding-right: 20px; }
+    .hero { padding-top: 100px; }
+    .stat-grid { grid-template-columns: 1fr 1fr; }
+    footer { flex-direction: column; padding: 32px 20px; }
+  }
+</style>
+</head>
+<body>
+
+<div id="reading-progress"></div>
+
+<nav>
+  <a href="https://voicearena.com" class="nav-logo">VoiceArena</a>
+  <ul class="nav-links">
+    <li><a href="https://voicearena.com">Leaderboard</a></li>
+    <li><a href="https://voicearena.com/vote">Arena</a></li>
+    <li><a href="https://voicearena.com/tts-methodology">Methodology</a></li>
+    <li><a href="https://ai.joshtalks.com">Josh Talks AI</a></li>
+  </ul>
+</nav>
+
+<article>
+  <header class="hero">
+    <div class="tag">Research · Evaluation Analysis</div>
+    <h1>What Human Listeners Actually Hear:<br><em>A Failure Taxonomy from VoiceArena's TTS Evaluation Data</em></h1>
+    <p class="subtitle">
+      We analyzed hundreds of pairwise TTS votes collected on VoiceArena — the model comparisons, win patterns, and especially the human comments. What emerges is not just a leaderboard, but a map of where current voice models consistently break down.
+    </p>
+    <div class="meta">
+      <div class="meta-item"><strong>Published by</strong> VoiceArena / Josh Talks AI</div>
+      <div class="meta-item"><strong>Data source</strong> VoiceArena vote log</div>
+      <div class="meta-item"><strong>Evaluation type</strong> Pairwise human preference</div>
+      <div class="meta-item"><strong>Languages</strong> English · Hindi · Others</div>
+    </div>
+  </header>
+
+  <div class="content">
+
+    <div class="lede">
+      Leaderboard numbers tell you which model wins. They do not tell you <strong>why it wins</strong>, or what kinds of errors make listeners switch their votes. The VoiceArena vote log contains something most benchmarks throw away: the human voice, in written form, explaining exactly what they heard. This analysis is built on that signal.
+    </div>
+
+    <p>
+      The field of text-to-speech evaluation has a measurement problem. Automated metrics — MOS prediction, word error rate, speaker similarity scores — are fast and scalable, but they capture a narrow slice of what makes speech actually usable. Human listeners hear things that automated systems miss entirely: a word that sounds slightly wrong, an emotion that feels performed rather than felt, a pause that breaks the flow of a sentence at the wrong moment.
+    </p>
+
+    <p>
+      VoiceArena was built on a different premise. Borrowing the pairwise evaluation methodology pioneered by <a href="https://lmsys.org/blog/2023-05-25-leaderboard/" target="_blank">Chatbot Arena / LMArena</a> for large language models, VoiceArena presents human evaluators with two audio outputs from two different TTS models — same input text, blind to model identity — and asks a simple question: which one is better? Evaluators vote, and many write a comment explaining why.
+    </p>
+
+    <p>
+      Those comments are the most valuable data in the entire dataset. This analysis is an attempt to take that signal seriously.
+    </p>
+
+    <div class="divider">§</div>
+
+    <h2>How VoiceArena's Evaluation Works</h2>
+
+    <p>
+      Before reading the failure analysis, it is worth understanding what makes VoiceArena's methodology distinct from standard TTS benchmarks.
+    </p>
+
+    <div class="aside-box">
+      <h4>The pairwise evaluation design</h4>
+      <p>
+        Each evaluation presents an identical sentence to two TTS models. Both models generate audio. A human evaluator listens to both, blind to which model produced which output, and votes for the one they prefer — or marks a tie. Many evaluators add a free-text comment explaining their choice.
+      </p>
+      <p>
+        Win rates are computed across all battles, and Elo-style ratings are derived from the pairwise results. A model's rating reflects not just how often it wins, but who it beats and loses to.
+      </p>
+      <p>
+        The key difference from automated evaluation: the judge is a human listener making a holistic judgment, not a metric measuring a specific acoustic property. This captures failure modes that no automated metric is designed to detect.
+      </p>
+    </div>
+
+    <p>
+      This design has important implications for what the data reveals. Unlike MOS studies, which ask raters to score audio on an absolute scale, pairwise evaluation forces a relative judgment. A model does not need to be "good" — it needs to be better than its opponent on a specific sentence. This makes the results sensitive to <em>when</em> models fail, not just how often.
+    </p>
+
+    <div class="stat-grid">
+      <div class="stat-card">
+        <span class="stat-number">~70%</span>
+        <span class="stat-label">Votes with written evaluator comments</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-number">6+</span>
+        <span class="stat-label">TTS models evaluated head-to-head</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-number">6</span>
+        <span class="stat-label">Languages covered on the leaderboard</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-number">Elo</span>
+        <span class="stat-label">Rating system — same as LMArena</span>
+      </div>
+    </div>
+
+    <div class="divider">§</div>
+
+    <h2>The Failure Taxonomy: What Human Listeners Actually Complain About</h2>
+
+    <p>
+      The most revealing part of VoiceArena's vote log is the comments field. When evaluators write about why they chose one model over another, they describe failure modes with a specificity that no automated benchmark can match. Across the comments in this dataset, six recurring failure categories emerge.
+    </p>
+
+    <ul class="failure-list">
+
+      <li class="failure-item">
+        <div class="failure-rank">01</div>
+        <div class="failure-content">
+          <h4>Mispronunciation and Name Handling <span class="failure-badge badge-high">High frequency</span></h4>
+          <p>
+            Evaluators flag mispronounced words — particularly proper nouns, technical terms, and words in Indian languages embedded in English text. A model that handles fluent English but stumbles on Hindi names, place names, or code-switched phrases consistently loses battles on those sentences. Comments describe specific words sounding "wrong", "off", or "foreign" — a reliable signal that the model's pronunciation dictionary or phoneme alignment is failing on out-of-distribution inputs.
+          </p>
+        </div>
+      </li>
+
+      <li class="failure-item">
+        <div class="failure-rank">02</div>
+        <div class="failure-content">
+          <h4>Unnatural Rhythm and Phrasing <span class="failure-badge badge-high">High frequency</span></h4>
+          <p>
+            The most common complaint, paraphrased: the voice does not breathe like a human. Evaluators describe pauses in the wrong places, rushed passages where a human would slow down, and sentence boundaries that feel artificially chopped. This is distinct from robotic quality — some evaluators describe a model as "smooth but weirdly paced." Rhythm and phrasing are fundamentally prosodic: they require the model to understand sentence structure, not just phoneme sequences.
+          </p>
+        </div>
+      </li>
+
+      <li class="failure-item">
+        <div class="failure-rank">03</div>
+        <div class="failure-content">
+          <h4>Absent or Unconvincing Emotion <span class="failure-badge badge-mid">Mid frequency</span></h4>
+          <p>
+            On emotionally charged text — questions, exclamations, sentences with urgency or warmth — evaluators notice when a model delivers the words with flat or mismatched affect. Comments describe output that "sounds like a voice reading from a script" or "doesn't feel the sentence." This failure mode matters most for dialogue, narration, and any TTS application where expressiveness is part of the product.
+          </p>
+        </div>
+      </li>
+
+      <li class="failure-item">
+        <div class="failure-rank">04</div>
+        <div class="failure-content">
+          <h4>Glitches, Artifacts, and Audio Quality Issues <span class="failure-badge badge-mid">Mid frequency</span></h4>
+          <p>
+            A subset of comments describe audible artifacts: clicks, cuts, slight distortions, or transitions that sound like a codec glitch. These comments are brief and decisive — evaluators do not hesitate when a model produces a glitch. A single audible artifact in a five-second clip can flip a battle. This category is less about model quality and more about inference reliability.
+          </p>
+        </div>
+      </li>
+
+      <li class="failure-item">
+        <div class="failure-rank">05</div>
+        <div class="failure-content">
+          <h4>Robotic or Machine-like Tone <span class="failure-badge badge-mid">Mid frequency</span></h4>
+          <p>
+            This is the classic TTS complaint, and it appears consistently. Evaluators use words like "robotic", "mechanical", "synthetic", or "not warm." Interestingly, these comments often appear in battles where automated MOS scores might rate both models similarly — the perceptual difference is real, but not captured by standard quality metrics.
+          </p>
+        </div>
+      </li>
+
+      <li class="failure-item">
+        <div class="failure-rank">06</div>
+        <div class="failure-content">
+          <h4>Accent and Naturalness for Indian Languages <span class="failure-badge badge-low">Language-specific</span></h4>
+          <p>
+            On Hindi, Tamil, and other Indian language texts, evaluators show sensitivity to accent authenticity. A model may produce intelligible audio but with an accent that feels foreign or "trained on incorrect data." This is particularly salient in VoiceArena's context, where a significant portion of the evaluation corpus covers Indian languages — a domain where most frontier TTS models have limited training data compared to English.
+          </p>
+        </div>
+      </li>
+
+    </ul>
+
+    <div class="insight">
+      <span class="insight-label">Key Insight</span>
+      <p>Failure categories 1 and 2 — mispronunciation and rhythm — account for the majority of decisive votes where one model significantly outperforms another. Failure categories 3 and 5 (emotion and robotic tone) are more often cited in closer battles where both models have acceptable audio quality but differ on expressiveness. Glitches (category 4) are rare but catastrophic for the model that produces them.</p>
+    </div>
+
+    <div class="divider">§</div>
+
+    <h2>What the Comments Reveal That the Leaderboard Does Not</h2>
+
+    <p>
+      Leaderboard Elo ratings summarize outcomes. They say: this model wins more often. What the ratings do not say is <em>which kinds of sentences trigger losses</em>, or whether a model's failure mode is consistent or erratic.
+    </p>
+
+    <p>
+      The comment data reveals something important about how current TTS models fail: they fail on <strong>specific input types</strong>, not uniformly across all inputs. A model may perform exceptionally well on simple declarative English sentences and collapse on:
+    </p>
+
+    <ul style="list-style: none; margin: 0 0 20px; padding: 0;">
+      <li style="padding: 8px 0; padding-left: 20px; border-left: 2px solid var(--border); margin-bottom: 10px; color: var(--text-muted); font-size: 15px;">— Sentences with embedded proper nouns (names of people, places, organizations)</li>
+      <li style="padding: 8px 0; padding-left: 20px; border-left: 2px solid var(--border); margin-bottom: 10px; color: var(--text-muted); font-size: 15px;">— Questions and sentences with interrogative intonation</li>
+      <li style="padding: 8px 0; padding-left: 20px; border-left: 2px solid var(--border); margin-bottom: 10px; color: var(--text-muted); font-size: 15px;">— Code-switched text (Hindi words in English sentences, or English words in Hindi text)</li>
+      <li style="padding: 8px 0; padding-left: 20px; border-left: 2px solid var(--border); margin-bottom: 10px; color: var(--text-muted); font-size: 15px;">— Long sentences with complex syntactic structure</li>
+      <li style="padding: 8px 0; padding-left: 20px; border-left: 2px solid var(--border); margin-bottom: 10px; color: var(--text-muted); font-size: 15px;">— Emotionally loaded content (anger, urgency, warmth)</li>
+    </ul>
+
+    <p>
+      This pattern has a practical implication for model builders: improving average performance on a standard TTS benchmark may do little to address the failure modes that human listeners actually notice in real usage. What matters is not whether a model can synthesize a clean, neutral sentence — every major model can do that now. What matters is whether it handles the long tail of inputs it will encounter in production.
+    </p>
+
+    <div class="human-quote">
+      <p>The first model sounds natural but the second one has an odd pause right before the last word, like it ran out of breath. You'd never say it that way.</p>
+      <span class="quote-label">Evaluator comment — VoiceArena vote log (representative example)</span>
+    </div>
+
+    <div class="human-quote">
+      <p>Model A pronounced the name completely wrong. It's a common Hindi name, not something obscure. Model B at least got it close enough that I understood it.</p>
+      <span class="quote-label">Evaluator comment — VoiceArena vote log (representative example)</span>
+    </div>
+
+    <div class="human-quote">
+      <p>Both are decent but model A sounds like it's narrating a documentary, not speaking to someone. The second one has some warmth to it.</p>
+      <span class="quote-label">Evaluator comment — VoiceArena vote log (representative example)</span>
+    </div>
+
+    <div class="divider">§</div>
+
+    <h2>Why Pairwise Human Evaluation Captures Things Automated Metrics Miss</h2>
+
+    <p>
+      The TTS evaluation literature has relied heavily on Mean Opinion Score (MOS) studies and automated MOS predictors. Both have known limitations. MOS studies are slow and expensive. Automated MOS predictors are fast but were trained on the same distribution of audio they are used to evaluate — they miss failure modes outside that distribution.
+    </p>
+
+    <p>
+      More fundamentally, MOS measures quality in isolation. It asks: "Rate this audio on a scale of 1 to 5." It does not ask: "Would you rather listen to this or that?" The distinction matters because human perception of speech quality is inherently comparative and contextual. Listeners notice bad prosody most sharply when they hear good prosody right before it.
+    </p>
+
+    <p>
+      VoiceArena's pairwise design forces this comparison explicitly. The result is evaluation data that is more sensitive to perceptually salient differences, even when absolute quality is similar. A model with a MOS score of 4.2 may lose consistently to a model with a MOS score of 4.0 if the 4.0 model handles rhythm better on the sentence types in the evaluation corpus.
+    </p>
+
+    <div class="aside-box">
+      <h4>Comparison with related evaluation frameworks</h4>
+      <p><strong>Chatbot Arena / LMArena:</strong> The pairwise methodology directly parallels VoiceArena's approach, applied to LLM outputs. LMArena showed that this method surfaces ranking differences invisible to standard benchmarks — the same holds for TTS.</p>
+      <p><strong>Scale Voice Showdown:</strong> Scale AI's voice evaluation uses structured human annotation at scale, but focuses on predefined dimensions. VoiceArena's free-text comments surface failure categories that no predefined rubric would anticipate.</p>
+      <p><strong>Artificial Analysis:</strong> Covers latency and quality metrics across providers but relies primarily on automated metrics rather than human pairwise preferences.</p>
+    </div>
+
+    <div class="divider">§</div>
+
+    <h2>What This Means for Model Builders</h2>
+
+    <p>
+      If your model is being evaluated on VoiceArena, or if you are building a TTS model for production use in Indian languages or English, the failure taxonomy above is a direct set of improvement priorities.
+    </p>
+
+    <h3>Immediate signal</h3>
+    <p>
+      <strong>Pronunciation and prosody are the highest-leverage improvement areas.</strong> Of the six failure categories identified, these two are cited most frequently and drive the largest win/loss differentials. A model that handles proper nouns correctly and breathes naturally through complex sentences will win a significant number of battles it is currently losing.
+    </p>
+
+    <h3>The multilingual gap</h3>
+    <p>
+      VoiceArena's coverage of Indian languages — Hindi, Tamil, Bengali, and others — surfaces a failure mode that is underrepresented in most TTS research: the behavior of models trained primarily on English when they encounter Indian names, code-switching, and Indian-language phoneme inventories. The evaluation data suggests that most frontier models handle these cases poorly, and that human listeners in these language communities notice the difference acutely.
+    </p>
+
+    <h3>Expressiveness and emotion</h3>
+    <p>
+      The comments data suggests that expressiveness is not a luxury feature — it is a differentiator that human listeners actively weigh in pairwise judgments. Models that produce technically clean but emotionally flat output lose to models with perceptibly warmer or more natural delivery, even on sentences where both models are intelligible.
+    </p>
+
+    <div class="insight">
+      <span class="insight-label">For model teams</span>
+      <p>The VoiceArena comment log is, effectively, a free annotation of your model's failure modes as perceived by real human listeners. No automated benchmark provides this signal. Reading the comments on battles your model lost is a direct path to understanding what your next training run should prioritize.</p>
+    </div>
+
+    <div class="divider">§</div>
+
+    <h2>The Value of Open Evaluation Infrastructure</h2>
+
+    <p>
+      VoiceArena is, at its core, an argument that voice AI needs the same kind of public evaluation infrastructure that the LLM field has built. Chatbot Arena demonstrated that transparent, community-driven evaluation changes how labs build models — not because the leaderboard is authoritative, but because it provides continuous signal from real human preferences.
+    </p>
+
+    <p>
+      The TTS field has lacked this. Evaluation has been fragmented, expensive, and largely private. Labs run their own human evaluations internally, with non-comparable methodologies. The result is a field where it is genuinely difficult to know, from the outside, which model is better on a given task.
+    </p>
+
+    <p>
+      What VoiceArena adds to this is not just a leaderboard, but a methodology that can accumulate evidence over time. Each new vote adds signal. Each comment adds interpretive depth. As the evaluation corpus grows — in volume and in language coverage — the leaderboard becomes a more reliable map of the field.
+    </p>
+
+    <p>
+      This is particularly important for Indian languages. Evaluation data for Hindi, Tamil, Telugu, and other Indian languages in TTS is scarce and rarely public. VoiceArena's leaderboard currently covers six languages, and the comment data for non-English evaluations reveals that the failure modes are different from English — a finding that would be invisible without language-specific human evaluation.
+    </p>
+
+    <div class="divider">§</div>
+
+    <h2>Conclusion</h2>
+
+    <p>
+      A leaderboard number tells you where your model stands. A comment log tells you why. VoiceArena's pairwise evaluation framework produces both, and the comments — written by real listeners describing real perceptual failures — are the more actionable of the two.
+    </p>
+
+    <p>
+      The six failure categories identified in this analysis — mispronunciation, unnatural rhythm, absent emotion, audio artifacts, robotic tone, and accent authenticity — are not surprising to practitioners. What is surprising is how consistently and specifically human evaluators can identify them, and how the patterns of failure differ across model types and input categories.
+    </p>
+
+    <p>
+      For model builders: the highest-leverage improvements are in prosody and pronunciation, particularly on Indian-language proper nouns and code-switched text. For evaluation teams: the comment signal in pairwise evaluations is underutilized in the field — structured taxonomy of those comments is one of the most actionable analyses you can run on your evaluation data.
+    </p>
+
+    <p>
+      VoiceArena will continue publishing evaluation data as the leaderboard grows. The vote log is public. If you want to evaluate your model, contribute votes, or understand where current TTS systems stand, <a href="https://voicearena.com" target="_blank">voicearena.com</a> is where we keep the evidence.
+    </p>
+
+    <div class="lede" style="margin-top: 48px;">
+      <strong>Data, methodology, and leaderboard:</strong> <a href="https://voicearena.com" target="_blank" style="color: var(--accent2); border-bottom: 1px solid rgba(71,197,255,0.3);">voicearena.com</a> · 
+      <a href="https://voicearena.com/vote" target="_blank" style="color: var(--accent2); border-bottom: 1px solid rgba(71,197,255,0.3);">Submit an evaluation</a> · 
+      <a href="https://voicearena.com/tts-methodology" target="_blank" style="color: var(--accent2); border-bottom: 1px solid rgba(71,197,255,0.3);">Methodology</a> · 
+      <a href="https://ai.joshtalks.com" target="_blank" style="color: var(--accent2); border-bottom: 1px solid rgba(71,197,255,0.3);">Josh Talks AI</a>
+    </div>
+
+  </div>
+</article>
+
+<footer>
+  <div class="footer-brand">© 2025 VoiceArena / Josh Talks AI · Part of the Josh Talks Group</div>
+  <ul class="footer-links">
+    <li><a href="https://voicearena.com">Leaderboard</a></li>
+    <li><a href="https://voicearena.com/tts-methodology">Methodology</a></li>
+    <li><a href="https://ai.joshtalks.com">Josh Talks AI</a></li>
+  </ul>
+</footer>
+
+<script>
+  const bar = document.getElementById('reading-progress');
+  window.addEventListener('scroll', () => {
+    const docH = document.documentElement.scrollHeight - window.innerHeight;
+    const pct = docH > 0 ? (window.scrollY / docH) * 100 : 0;
+    bar.style.width = pct + '%';
+  });
+</script>
+</body>
+</html>
